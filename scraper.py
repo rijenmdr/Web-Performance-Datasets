@@ -4,6 +4,7 @@ import time
 import csv
 import os
 from dotenv import load_dotenv
+from urllib.parse import urlparse
 
 # Load API key
 load_dotenv()
@@ -15,6 +16,10 @@ API_URL = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
 DELAY_SECONDS = 2      # rate limiting
 
 def fetch_pagespeed_metrics(url, retries=3, backoff_factor=1.0):
+    """
+    Fetch comprehensive performance metrics from PageSpeed Insights API
+    Includes Core Web Vitals and all metrics from research proposal
+    """
     params = {
         "url": url,
         "key": API_KEY,
@@ -36,40 +41,54 @@ def fetch_pagespeed_metrics(url, retries=3, backoff_factor=1.0):
             audits = lr.get("audits", {})
 
             def num(audit_key):
+                """Extract numeric value from audit"""
                 v = audits.get(audit_key, {})
                 if isinstance(v, dict):
                     return v.get("numericValue")
                 return None
 
             def safe_list_count(audit_key):
+                """Count items in audit details"""
                 details = audits.get(audit_key, {}).get("details", {})
                 items = details.get("items") or []
                 return len(items)
 
+            def get_resource_count(resource_type):
+                """Count resources of specific type"""
+                details = audits.get("network-requests", {}).get("details", {})
+                items = details.get("items") or []
+                return sum(1 for item in items if item.get("resourceType") == resource_type)
+
+            def get_resource_size(resource_type):
+                """Get total size of resources of specific type in KB"""
+                details = audits.get("network-requests", {}).get("details", {})
+                items = details.get("items") or []
+                total_bytes = sum(item.get("transferSize", 0) for item in items 
+                                if item.get("resourceType") == resource_type)
+                return total_bytes / 1024 if total_bytes else None
+
+            # Extract metrics as per research proposal (Table 3.1)
             metrics = {
                 "url": lr.get("finalUrl") or url,
+                "requested_url": url,
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
 
-                # Network
-                "TTFB_ms": num("server-response-time"),
-
-                # Rendering
-                "FCP_ms": num("first-contentful-paint"),
+                # ===== CORE WEB VITALS =====
                 "LCP_ms": num("largest-contentful-paint"),
+                "FCP_ms": num("first-contentful-paint"),
+                "TBT_ms": num("total-blocking-time"),
+                "CLS": num("cumulative-layout-shift"),
+
+                # ===== USER EXPERIENCE METRICS =====
+                "TTI_ms": num("interactive"),
                 "SpeedIndex_ms": num("speed-index"),
 
-                # Execution
-                "TBT_ms": num("total-blocking-time"),
-                "TTI_ms": num("interactive"),
-
-                # Resources
+                # ===== TRADITIONAL TECHNICAL METRICS =====
+                "TTFB_ms": num("server-response-time"),
                 "noOfRequests": safe_list_count("network-requests"),
                 "pageSize_kb": (num("total-byte-weight") / 1024) if num("total-byte-weight") is not None else None,
-
-                # JS execution cost (proxy)
                 "javascriptExecution_ms": num("bootup-time"),
-
-                # Overall load time
-                "loadTime_ms": lr.get("timing", {}).get("total")
+                "loadTime_ms": lr.get("timing", {}).get("total"),
             }
 
             return metrics
@@ -103,24 +122,42 @@ def fetch_pagespeed_metrics(url, retries=3, backoff_factor=1.0):
 
 
 def load_urls(file_path):
+    """Load URLs from file, one per line"""
     with open(file_path, "r") as f:
-        return [line.strip() for line in f if line.strip()]
+        return [line.strip() for line in f if line.strip() and not line.strip().startswith('#')]
 
 
 def save_json(data, filename="performance_data.json"):
+    """Save data to JSON file"""
     with open(filename, "w") as f:
         json.dump(data, f, indent=4)
 
 
 def save_csv(data, filename="performance_data.csv"):
+    """Save data to CSV file with consistent column ordering"""
     if not data:
         return
 
-    # Build a consistent set of fieldnames across all rows
-    fieldnames = set()
+    # Define column order matching research proposal structure (Table 3.1)
+    preferred_order = [
+        "url", "requested_url", "timestamp",
+        # Core Web Vitals
+        "LCP_ms", "FCP_ms", "TBT_ms", "CLS",
+        # User Experience Metrics
+        "TTI_ms", "SpeedIndex_ms",
+        # Traditional Technical Metrics
+        "TTFB_ms", "noOfRequests", "pageSize_kb", "javascriptExecution_ms", "loadTime_ms"
+    ]
+
+    # Build complete fieldname set
+    all_fields = set()
     for row in data:
-        fieldnames.update(row.keys())
-    fieldnames = list(fieldnames)
+        all_fields.update(row.keys())
+    
+    # Order fields: preferred first, then any extras
+    fieldnames = [f for f in preferred_order if f in all_fields]
+    extra_fields = sorted(all_fields - set(preferred_order))
+    fieldnames.extend(extra_fields)
 
     with open(filename, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -130,6 +167,7 @@ def save_csv(data, filename="performance_data.csv"):
 
 
 def load_json_file(filename="performance_data.json"):
+    """Load existing JSON file if it exists"""
     if not os.path.exists(filename):
         return []
     try:
@@ -139,8 +177,6 @@ def load_json_file(filename="performance_data.json"):
         print(f"Warning: couldn't load existing JSON file '{filename}': {e}")
         return []
 
-
-from urllib.parse import urlparse
 
 def normalize_url(u):
     """Normalize URLs for matching: lower-case host, strip leading www., remove trailing slash and drop query/fragment."""
@@ -159,26 +195,85 @@ def normalize_url(u):
         return u.rstrip('/').lower()
 
 
+def print_statistics(data):
+    """Print summary statistics of collected data"""
+    if not data:
+        print("\nNo data to analyze.")
+        return
+    
+    print("\n" + "="*60)
+    print("DATASET STATISTICS")
+    print("="*60)
+    
+    print(f"\nTotal records: {len(data)}")
+    
+    # Count non-null values for key metrics
+    metrics_to_check = [
+        ("LCP_ms", "Largest Contentful Paint"),
+        ("FCP_ms", "First Contentful Paint"),
+        ("TBT_ms", "Total Blocking Time"),
+        ("CLS", "Cumulative Layout Shift"),
+        ("TTI_ms", "Time to Interactive"),
+        ("SpeedIndex_ms", "Speed Index"),
+        ("TTFB_ms", "Time to First Byte"),
+        ("pageSize_kb", "Page Size"),
+        ("javascriptExecution_ms", "JavaScript Execution")
+    ]
+    
+    print("\nData Completeness:")
+    for key, name in metrics_to_check:
+        count = sum(1 for d in data if d.get(key) is not None)
+        percentage = (count / len(data) * 100) if data else 0
+        print(f"  {name:30s}: {count:4d}/{len(data):4d} ({percentage:5.1f}%)")
+    
+    print("="*60)
+
+
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="Fetch PageSpeed Insights metrics for a list of URLs")
-    parser.add_argument("--urls-file", default="urls.txt", help="Path to the URLs file")
+    parser = argparse.ArgumentParser(
+        description="Fetch PageSpeed Insights metrics for web performance evaluation ML research",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Fetch metrics for all URLs in urls.txt
+  python script.py
+  
+  # Force re-fetch all URLs
+  python script.py --force
+  
+  # Check what would be fetched without actually fetching
+  python script.py --check
+  
+  # Use custom URLs file and delay
+  python script.py --urls-file my_urls.txt --delay 3
+        """
+    )
+    parser.add_argument("--urls-file", default="urls.txt", help="Path to the URLs file (default: urls.txt)")
     parser.add_argument("--force", action="store_true", help="Force re-fetching even if results already exist")
-    parser.add_argument("--delay", type=float, default=DELAY_SECONDS, help="Delay between requests in seconds")
+    parser.add_argument("--delay", type=float, default=DELAY_SECONDS, help="Delay between requests in seconds (default: 2)")
     parser.add_argument("--check", action="store_true", help="Only show how many would be fetched/skipped without performing requests")
     parser.add_argument("--no-resume", action="store_true", help="Disable resuming from the last recorded item in performance_data.json")
+    parser.add_argument("--stats", action="store_true", help="Print statistics about existing data and exit")
     args = parser.parse_args()
 
     if not API_KEY:
         raise RuntimeError("PAGESPEED_API_KEY is not set. Please set it in your environment or .env file.")
 
-    urls = load_urls(args.urls_file)
-
-    # Load existing results (preserve order)
+    # Load existing results
     existing_list = load_json_file()
 
-    # Build mapping of normalized keys to items (for both requested_url and final url)
+    # If user just wants stats, show them and exit
+    if args.stats:
+        print_statistics(existing_list)
+        return
+
+    # Load URLs to fetch
+    urls = load_urls(args.urls_file)
+    print(f"Loaded {len(urls)} URLs from {args.urls_file}")
+
+    # Build mapping of normalized keys to items
     existing_map = {}
     for item in existing_list:
         for field in ("requested_url", "url"):
@@ -214,20 +309,31 @@ def main():
         else:
             to_fetch.append(url)
 
-    print(f"Found {len(existing_list)} existing records. Starting at index {start_idx}. Skipping {len(skipped)} URLs in tail; {len(to_fetch)} to fetch.")
+    print(f"Found {len(existing_list)} existing records. Starting at index {start_idx}.")
+    print(f"Skipping {len(skipped)} URLs in tail; {len(to_fetch)} to fetch.")
 
     # If user only wants to check what would be done, exit now
     if args.check:
-        print("Check mode - exiting without fetching.")
+        print("\nCheck mode - exiting without fetching.")
+        if to_fetch:
+            print(f"\nWould fetch {len(to_fetch)} URLs:")
+            for i, url in enumerate(to_fetch[:10], 1):
+                print(f"  {i}. {url}")
+            if len(to_fetch) > 10:
+                print(f"  ... and {len(to_fetch) - 10} more")
         return
 
-    # Process and append/replace entries in existing_list so order is preserved
+    # Process and append/replace entries in existing_list
+    print("\nStarting data collection...")
+    print("="*60)
+    
+    successful = 0
+    failed = 0
+    
     for i, url in enumerate(to_fetch, start=1):
-        print(f"[{i}/{len(to_fetch)}] Fetching metrics for {url}")
+        print(f"\n[{i}/{len(to_fetch)}] Fetching metrics for: {url}")
         try:
             metrics = fetch_pagespeed_metrics(url)
-            # Record the original requested URL so we can match next runs
-            metrics["requested_url"] = url
 
             # Normalize key based on requested URL
             key_req = normalize_url(metrics.get("requested_url"))
@@ -249,16 +355,37 @@ def main():
             # Save progress after each successful fetch
             save_json(existing_list)
             save_csv(existing_list)
-            print(f"Saved progress ({len(existing_list)} records).")
+            
+            successful += 1
+            print(f"✓ Success! LCP: {metrics.get('LCP_ms', 'N/A'):.0f}ms | FCP: {metrics.get('FCP_ms', 'N/A'):.0f}ms")
+            print(f"  Progress saved ({len(existing_list)} total records).")
+            
         except requests.exceptions.RequestException as e:
-            print(f"Error fetching {url}: {e}")
-        time.sleep(args.delay)
+            failed += 1
+            print(f"✗ Error fetching {url}: {e}")
+        
+        # Rate limiting delay
+        if i < len(to_fetch):  # Don't delay after last request
+            time.sleep(args.delay)
 
+    # Final save
     save_json(existing_list)
     save_csv(existing_list)
-    print(f"Done. Total records: {len(existing_list)} (skipped {len(skipped)}).")
+    
+    print("\n" + "="*60)
+    print("COLLECTION COMPLETE")
+    print("="*60)
+    print(f"Total records: {len(existing_list)}")
+    print(f"Newly fetched: {successful}")
+    print(f"Failed: {failed}")
+    print(f"Skipped: {len(skipped)}")
+    print("\nFiles saved:")
+    print("  - performance_data.json")
+    print("  - performance_data.csv")
+    
+    # Print statistics
+    print_statistics(existing_list)
 
 
 if __name__ == "__main__":
     main()
-
