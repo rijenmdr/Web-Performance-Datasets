@@ -1,10 +1,14 @@
 import csv
 import json
 
-csv_file = 'performance_data.csv'
-json_file = 'performance_data.json'
-csv_output = 'performance_data_cleaned.csv'
-json_output = 'performance_data_cleaned.json'
+import os
+
+# Adjust paths relative to project root
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+csv_file = os.path.join(PROJECT_ROOT, 'performance_data.csv')
+json_file = os.path.join(PROJECT_ROOT, 'performance_data.json')
+csv_output = os.path.join(PROJECT_ROOT, 'performance_data_cleaned.csv')
+json_output = os.path.join(PROJECT_ROOT, 'performance_data_cleaned.json')
 
 # Clean CSV
 def clean_csv(input_path, output_path):

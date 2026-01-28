@@ -1,3 +1,4 @@
+
 import requests
 import json
 import time
@@ -5,6 +6,9 @@ import csv
 import os
 from dotenv import load_dotenv
 from urllib.parse import urlparse
+
+# Adjust paths relative to project root
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 
 # Load API key
 load_dotenv()
@@ -123,12 +127,18 @@ def fetch_pagespeed_metrics(url, retries=3, backoff_factor=1.0):
 
 def load_urls(file_path):
     """Load URLs from file, one per line"""
+    # If not absolute, resolve relative to project root
+    if not os.path.isabs(file_path):
+        file_path = os.path.join(PROJECT_ROOT, file_path)
     with open(file_path, "r") as f:
         return [line.strip() for line in f if line.strip() and not line.strip().startswith('#')]
 
 
 def save_json(data, filename="performance_data.json"):
     """Save data to JSON file"""
+    # If not absolute, resolve relative to project root
+    if not os.path.isabs(filename):
+        filename = os.path.join(PROJECT_ROOT, filename)
     with open(filename, "w") as f:
         json.dump(data, f, indent=4)
 
@@ -137,6 +147,10 @@ def save_csv(data, filename="performance_data.csv"):
     """Save data to CSV file with consistent column ordering"""
     if not data:
         return
+
+    # If not absolute, resolve relative to project root
+    if not os.path.isabs(filename):
+        filename = os.path.join(PROJECT_ROOT, filename)
 
     # Define column order matching research proposal structure (Table 3.1)
     preferred_order = [
@@ -168,6 +182,9 @@ def save_csv(data, filename="performance_data.csv"):
 
 def load_json_file(filename="performance_data.json"):
     """Load existing JSON file if it exists"""
+    # If not absolute, resolve relative to project root
+    if not os.path.isabs(filename):
+        filename = os.path.join(PROJECT_ROOT, filename)
     if not os.path.exists(filename):
         return []
     try:
