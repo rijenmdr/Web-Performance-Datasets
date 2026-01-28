@@ -9,6 +9,26 @@ This project is designed to collect, store, and analyze web performance data fro
 - `performance_data.csv` — Collected performance data in CSV format.
 - `performance_data.json` — Collected performance data in JSON format.
 
+## Handling Missing/Null Data
+
+To remove websites whose data fields have missing (null, empty, or 'null') values, use the provided cleaning script:
+
+1. Run the cleaning script:
+   ```bash
+   python clean_missing_data.py
+   ```
+   This will process both `performance_data.csv` and `performance_data.json`, removing any rows/objects with missing data fields.
+
+2. Cleaned files will be saved as:
+   - `performance_data_cleaned.csv`
+   - `performance_data_cleaned.json`
+
+3. You can use these cleaned files for further analysis.
+
+The script removes any row/object where any field is empty, None, or the string 'null'.
+
+---
+
 ## Usage
 
 1. **Prepare URLs**
