@@ -1,0 +1,3 @@
+Approach,Imbalance_Ratio,Min_Samples,Train_Set_Min,Test_Set_Min,Status
+Fixed Bins,94.12:1,8,6,1,❌ Unusable
+Quantile Bins,1.00:1,350,280,70,✅ Recommended

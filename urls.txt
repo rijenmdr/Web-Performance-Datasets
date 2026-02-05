@@ -1956,3 +1956,131 @@ https://airmarshalls.com
 https://united.micronesia.com
 https://pacific.airlines.com
 https://cheapskat.com
+
+# Government websites (often poorly optimized)
+https://dmv.ca.gov
+https://ssa.gov
+https://irs.gov
+https://usps.com
+https://healthcare.gov
+https://va.gov
+https://fema.gov
+https://epa.gov
+https://nasa.gov
+https://nih.gov
+https://cdc.gov
+https://nist.gov
+
+# Local government sites
+https://nyc.gov
+https://chicago.gov
+https://boston.gov
+https://seattle.gov
+https://miami.gov
+https://phoenix.gov
+https://dallas.gov
+
+# Academic institutions (mixed performance)
+https://harvard.edu
+https://mit.edu
+https://stanford.edu
+https://berkeley.edu
+https://columbia.edu
+https://nyu.edu
+https://ucla.edu
+https://umich.edu
+https://wisc.edu
+https://umn.edu
+
+# News sites with heavy ads/trackers
+https://cnn.com
+https://foxnews.com
+https://msnbc.com
+https://dailymail.co.uk
+https://thesun.co.uk
+https://nypost.com
+https://usatoday.com
+https://wsj.com
+https://latimes.com
+https://washingtonpost.com
+
+# E-commerce sites (smaller, less optimized)
+https://overstock.com
+https://wayfair.com
+https://zappos.com
+https://kohls.com
+https://jcpenney.com
+https://macys.com
+https://nordstrom.com
+https://anthropologie.com
+https://urbanoutfitters.com
+https://forever21.com
+
+# Blogs/Content sites (often bloated)
+https://buzzfeed.com
+https://huffpost.com
+https://mashable.com
+https://techcrunch.com
+https://engadget.com
+https://gizmodo.com
+https://lifehacker.com
+https://kotaku.com
+https://jalopnik.com
+https://deadspin.com
+
+# Real estate (image-heavy, poorly optimized)
+https://zillow.com
+https://realtor.com
+https://redfin.com
+https://trulia.com
+https://apartments.com
+https://rent.com
+https://padmapper.com
+
+# Travel sites (often slow)
+https://tripadvisor.com
+https://kayak.com
+https://priceline.com
+https://orbitz.com
+https://hotels.com
+https://travelocity.com
+https://hotwire.com
+
+# Local business directories
+https://yelp.com
+https://yellowpages.com
+https://superpages.com
+https://citysearch.com
+https://foursquare.com
+
+# Recipe/lifestyle sites (notoriously slow)
+https://allrecipes.com
+https://foodnetwork.com
+https://epicurious.com
+https://bonappetit.com
+https://food.com
+https://delish.com
+https://eatingwell.com
+https://tasteofhome.com
+
+# International sites (varying optimization levels)
+https://baidu.com
+https://alibaba.com
+https://taobao.com
+https://weibo.com
+https://vk.com
+https://ok.ru
+https://yandex.ru
+https://mail.ru
+
+# Smaller country websites
+https://gov.bd
+https://portal.gov.bd
+https://mygov.in
+https://india.gov.in
+https://gov.pk
+https://cabinet.gov.pk
+https://gov.lk
+https://president.gov.lk
+https://mowcsc.gov.np
+https://np.gov.np
