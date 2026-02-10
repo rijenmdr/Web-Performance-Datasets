@@ -1,0 +1,72 @@
+{
+  "preprocessing_version": "1.0",
+  "date_created": "2026-02-09T22:48:17.727255",
+  "original_rows": 1402,
+  "outliers_removed": 290,
+  "final_rows": 1112,
+  "metrics": [
+    "LCP_ms",
+    "FCP_ms",
+    "TBT_ms",
+    "CLS",
+    "TTI_ms",
+    "SpeedIndex_ms",
+    "TTFB_ms",
+    "noOfRequests",
+    "pageSize_kb",
+    "javascriptExecution_ms",
+    "loadTime_ms"
+  ],
+  "scaling_method": "RobustScaler",
+  "speed_score": {
+    "source": "SpeedIndex_ms",
+    "formula": "Google Web Vitals thresholds",
+    "range": [
+      0,
+      100
+    ],
+    "thresholds": {
+      "fast": 3000,
+      "moderate": 6000
+    }
+  },
+  "3class": {
+    "thresholds": {
+      "q33": 76.78356784301378,
+      "q67": 87.99781015813325
+    },
+    "distribution": {
+      "Excellent": 367,
+      "Good": 378,
+      "Unacceptable": 367
+    },
+    "imbalance_ratio": 1.0299727520435968,
+    "classes": [
+      "Unacceptable",
+      "Good",
+      "Excellent"
+    ]
+  },
+  "4class": {
+    "thresholds": {
+      "q25": 72.100324748438,
+      "q50": 83.03568802367865,
+      "q75": 90.04049353628042
+    },
+    "distribution": {
+      "Excellent": 278,
+      "Fair": 278,
+      "Good": 278,
+      "Poor": 278
+    },
+    "imbalance_ratio": 1.0,
+    "classes": [
+      "Poor",
+      "Fair",
+      "Good",
+      "Excellent"
+    ]
+  },
+  "data_leakage": "None - Speed Score from SpeedIndex only",
+  "recommended": "3-class for simpler interpretation"
+}
