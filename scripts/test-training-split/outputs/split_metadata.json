@@ -1,0 +1,40 @@
+{
+  "methodology": "Ghattas et al. (2025)",
+  "total_samples": 1112,
+  "n_features": 11,
+  "feature_names": [
+    "LCP_ms",
+    "FCP_ms",
+    "TBT_ms",
+    "CLS",
+    "TTI_ms",
+    "SpeedIndex_ms",
+    "TTFB_ms",
+    "noOfRequests",
+    "pageSize_kb",
+    "javascriptExecution_ms",
+    "loadTime_ms"
+  ],
+  "target_column": "Performance_Class",
+  "test_size": 334,
+  "random_state": 42,
+  "stratified": true,
+  "n_folds_cv": 10,
+  "train_size": 778,
+  "train_class_distribution": {
+    "Excellent": 257,
+    "Good": 264,
+    "Unacceptable": 257
+  },
+  "test_class_distribution": {
+    "Excellent": 110,
+    "Good": 114,
+    "Unacceptable": 110
+  },
+  "class_labels": [
+    "Excellent",
+    "Good",
+    "Unacceptable"
+  ],
+  "date_created": "2026-02-10T14:46:00.098551"
+}
